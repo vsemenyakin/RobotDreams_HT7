@@ -1,6 +1,10 @@
 ﻿#include "CommonTypes.hpp"
 #include "JSONUtils.hpp"
 
+#ifdef DebugPrint
+#include <iostream>
+#endif
+
 //-----------------------------------------------
 
 #ifdef DebugPrint
