@@ -13,7 +13,8 @@ class ITargetProvider {
 public:
     virtual size_t getTargetCount() = 0;
     virtual TargetState getTarget(const int index, const float inSimulationTime) = 0;
-    virtual ~ITargetProvider() { }
+
+	virtual ~ITargetProvider() = default;
 };
 
 // -------------

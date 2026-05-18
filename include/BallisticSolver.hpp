@@ -11,7 +11,7 @@ public:
 		const float ammo_zPos,
 		const AmmoParams& ammoParams) = 0;
 
-	virtual ~IBallisticSolver() { }
+	virtual ~IBallisticSolver() = default;
 };
 
 // ---------------
