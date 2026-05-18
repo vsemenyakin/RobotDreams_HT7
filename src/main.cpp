@@ -13,8 +13,9 @@ namespace fileNames
 
 int main()
 {
-	MissionProcessor missionProcessor(
-		fileNames::ammo, fileNames::config, fileNames::targets);
+	MissionProcessor missionProcessor{
+		fileNames::ammo, fileNames::config, fileNames::targets
+	};
 
 	while (missionProcessor.hasNext()) {
 		missionProcessor.step();
