@@ -105,7 +105,7 @@ void ConfigTargetProvider::TargetsConfig::print() const
 		}
 	}
 }
-#endif DebugPrint
+#endif //DebugPrint
 
 JSONConfigTargetProvider::TargetsConfig::~TargetsConfig()
 {

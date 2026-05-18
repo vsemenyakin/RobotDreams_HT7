@@ -145,7 +145,7 @@ void Config::print() const
 	simulation.print();
 	PrintField(targetArrayTimeStep);
 }
-#endif DebugPrint
+#endif //DebugPrint
 
 //-----------------------------------------------
 
