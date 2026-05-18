@@ -124,7 +124,7 @@ DroneState MissionProcessor::updateDrone(
 		break;
 	}
 
-	if (abs(nextState.direction - state.targetAngle) < droneConfig.turnThreshold) {
+	if (std::abs(nextState.direction - state.targetAngle) < droneConfig.turnThreshold) {
 		nextState.direction = state.targetAngle;
 
 		//Stopped because drone can rotate only when stopped
