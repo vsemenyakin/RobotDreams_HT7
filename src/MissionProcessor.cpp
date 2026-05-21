@@ -3,6 +3,7 @@
 #include "TargetProvider.hpp"
 #include "BallisticSolver.hpp"
 #include "ConfigLoader.hpp"
+#include "Utils.hpp"
 
 MissionProcessor::MissionProcessor(
 		const char* inAmmoConfigFileName,
@@ -26,12 +27,58 @@ void MissionProcessor::step() {
 		targetStates[targetIndex] = targetProvider->getTarget(targetIndex, simulationTime);
 	}
 
+	//Place for drone "brain" logic {{{
+	const Config& config = configLoader->getConfig();
+	const DroneConfig& droneConfig = config.drone;
+	const AmmoParams& ammoParams = *configLoader->getAmmoConfig().getParams(config.ammo.c_str());
+
+	const TargetState& currentTargetState = targetStates[droneState.targetIndex];	
+
+	if (droneAIState.previousTargetState.has_value()) {
+
+		const Coord targetVelocity = (currentTargetState.position - droneAIState.previousTargetState->position) / config.targetArrayTimeStep;
+
+		const Coord toTarget = currentTargetState.position - droneState.position;
+		const float distanceToTarget = toTarget.length();
+		
+		float flightTime;
+		float horizontalDistance;
+		ballisticSolver->computeAmmoDrop(
+			flightTime, horizontalDistance,
+			droneConfig.attackSpeed,
+			droneConfig.altitude,
+			ammoParams);
+		
+		const float timeToDrop = (distanceToTarget - horizontalDistance) / droneConfig.attackSpeed;
+
+		droneState.predictedTarget = currentTargetState.position + targetVelocity * timeToDrop;
+
+		const float targetDirection = toTarget.angle();
+
+		if (targetDirection < droneState.direction) {
+			droneState.targetAngle = targetDirection;
+			droneState.state = EDroneState::TURNING_MINUS;
+		}
+		else if (targetDirection > droneState.direction) {
+			droneState.targetAngle = targetDirection;
+			droneState.state = EDroneState::TURNING_PLUS;
+		}
+		else {
+			droneState.state = EDroneState::ACCELERATING;
+
+			if (equals(distanceToTarget, horizontalDistance, config.simulation.hitRadius)) {
+				droneState.dropPoint = droneState.position;
+			}
+		}
+	}
+
+	droneAIState.previousTargetState = currentTargetState;
+	//}}}
+
 	droneState = MissionProcessor::updateDrone(
 		droneState,
 		configLoader->getConfig().drone,
 		configLoader->getConfig().simulation);
-	
-	//Place for the target attacking logic
 
 	simulationStorage.addState(droneState);
 
@@ -86,7 +133,7 @@ DroneState MissionProcessor::updateDrone(
 
 	const float a = powf(droneConfig.attackSpeed, 2) / (2 * droneConfig.accelerationPath);
 
-	nextState.state = state.state;
+	//Here state - is like "target" state
 	switch (state.state)
 	{
 	case STOPPED:
@@ -124,11 +171,16 @@ DroneState MissionProcessor::updateDrone(
 		break;
 	}
 
-	if (std::abs(nextState.direction - state.targetAngle) < droneConfig.turnThreshold) {
-		nextState.direction = state.targetAngle;
+	if (state.state == TURNING_PLUS || state.state == TURNING_MINUS) {
+		const float leftTurn = nextState.direction - state.targetAngle;
+		if (std::abs(leftTurn) < droneConfig.turnThreshold ||
+			std::abs(leftTurn) < droneConfig.angularSpeed)
+		{
+			nextState.direction = state.targetAngle;
 
-		//Stopped because drone can rotate only when stopped
-		nextState.state = STOPPED;
+			//Stopped because drone can rotate only when stopped
+			nextState.state = STOPPED;
+		}
 	}
 
 	const float velocityPerStep = nextState.velocity * simulationConfig.timeStep;

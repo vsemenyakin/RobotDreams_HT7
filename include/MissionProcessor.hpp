@@ -4,6 +4,8 @@
 #include "CommonTypes.hpp"
 #include "SimulationStorage.hpp"
 
+#include <optional>
+
 class IConfigLoader;
 class IBallisticSolver;
 
@@ -46,6 +48,12 @@ private:
 
 	DroneState droneState{ };
 	TargetState* targetStates{ nullptr };
+
+	struct DroneAIState
+	{
+		std::optional<TargetState> previousTargetState{ };
+	};
+	DroneAIState droneAIState{ };
 
 	SimulationStorage simulationStorage{ };
 };
