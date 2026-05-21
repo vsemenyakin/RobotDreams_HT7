@@ -40,6 +40,9 @@ struct Coord
 	Coord operator/(float s) const;
 
 	bool operator==(const Coord& other) const;
+	
+	float length() const;
+	float angle() const;
 
 #ifdef DebugPrint
 	void print() const;

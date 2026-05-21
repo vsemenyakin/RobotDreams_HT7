@@ -76,6 +76,16 @@ bool Coord::operator==(const Coord& other) const
 	return (x == other.x) && (y == other.y);
 }
 
+float Coord::length() const
+{
+	return std::sqrt(x * x + y * y);
+}
+
+float Coord::angle() const
+{
+	return std::atan2(y, x);
+}
+
 #ifdef DebugPrint
 void Coord::print() const
 {
