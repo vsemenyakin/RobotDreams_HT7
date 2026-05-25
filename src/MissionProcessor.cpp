@@ -30,7 +30,7 @@ void MissionProcessor::step() {
 	//Place for drone "brain" logic {{{
 	const Config& config = configLoader->getConfig();
 	const DroneConfig& droneConfig = config.drone;
-	const AmmoParams& ammoParams = *configLoader->getAmmoConfig().getParams(config.ammo.c_str());
+	const AmmoParams& ammoParams = *configLoader->getAmmoConfig().getParams(config.ammo);
 
 	const TargetState& currentTargetState = targetStates[droneState.targetIndex];	
 
