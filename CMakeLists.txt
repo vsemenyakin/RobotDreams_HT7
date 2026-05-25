@@ -14,7 +14,6 @@ add_executable(ballistics_calculator
 	src/ConfigLoader.cpp
 	include/ConfigLoader.hpp
 	include/json.hpp
-	include/JSONUtils.hpp
 	src/main.cpp
 	src/SimulationStorage.cpp
 	include/SimulationStorage.hpp

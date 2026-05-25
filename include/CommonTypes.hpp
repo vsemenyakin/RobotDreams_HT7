@@ -2,7 +2,8 @@
 
 #include "json.hpp"
 
-#include <fstream>
+#include <map>
+#include <string>
 
 using json = nlohmann::json;
 
@@ -164,15 +165,12 @@ class AmmoConfig
 public:
 	static AmmoConfig createFromJSONFile(const char* inFileName);
 
-	const AmmoParams* getParams(const char* inParamsName) const;
+	const AmmoParams* getParams(const std::string& inParamsName) const;
 
 #ifdef DebugPrint
 	void print() const;
 #endif
 
-	~AmmoConfig();
-
 private:
-	AmmoParams* ammoParams = nullptr;
-	size_t ammoParamsNumber = 0;
+	std::map<std::string, AmmoParams> paramsMap{ };
 };

@@ -1,5 +1,7 @@
 ﻿#include "CommonTypes.hpp"
-#include "JSONUtils.hpp"
+
+#include <fstream>
+#include <assert.h>
 
 #ifdef DebugPrint
 #include <iostream>
@@ -200,27 +202,22 @@ AmmoConfig AmmoConfig::createFromJSONFile(const char* inFileName)
 	std::fstream inputFile{ inFileName };
 	const json jsonData = json::parse(inputFile);
 
-	readArrayFromJSON(result.ammoParams, result.ammoParamsNumber, jsonData);
+	const size_t paramsCount = jsonData.size();
+	for (size_t paramIndex = 0; paramIndex < paramsCount; ++paramIndex)
+	{
+		const AmmoParams ammoParam = jsonData[paramIndex];
+		result.paramsMap[ammoParam.name] = ammoParam;
+	}
 
 	inputFile.close();
 
 	return result;
 }
 
-const AmmoParams* AmmoConfig::getParams(const char* inParamsName) const
+const AmmoParams* AmmoConfig::getParams(const std::string& inParamsName) const
 {
-	if (ammoParams == nullptr)
-		return nullptr;
-
-	for (size_t index = 0; index < ammoParamsNumber; ++index)
-	{
-		const AmmoParams& ammoParam = ammoParams[index];
-
-		if (ammoParam.name == inParamsName)
-			return &ammoParam;
-	}
-
-	return nullptr;
+	auto iterator = paramsMap.find(inParamsName);
+	return (iterator != paramsMap.end()) ? &iterator->second : nullptr;
 }
 
 #ifdef DebugPrint
@@ -228,17 +225,9 @@ void AmmoConfig::print() const
 {
 	std::cout << "--- Ammo config ---" << std::endl;
 
-	for (size_t ammoParamIndex = 0; ammoParamIndex < ammoParamsNumber; ++ammoParamIndex)
+	for (const auto& pair : paramsMap)
 	{
-		ammoParams[ammoParamIndex].print();
+		pair.second.print();
 	}
 }
 #endif
-
-AmmoConfig::~AmmoConfig()
-{
-	if (ammoParams)
-	{
-		delete[] ammoParams;
-	}
-}
