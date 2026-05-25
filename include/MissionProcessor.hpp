@@ -5,6 +5,7 @@
 #include "SimulationStorage.hpp"
 
 #include <optional>
+#include <vector>
 
 class IConfigLoader;
 class IBallisticSolver;
@@ -47,7 +48,7 @@ private:
 	float simulationTime{ 0 };
 
 	DroneState droneState{ };
-	TargetState* targetStates{ nullptr };
+	std::vector<TargetState> targetStates{ };
 
 	struct DroneAIState
 	{

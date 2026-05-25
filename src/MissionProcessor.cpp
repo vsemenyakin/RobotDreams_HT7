@@ -105,23 +105,21 @@ MissionProcessor::~MissionProcessor() {
 	delete configLoader;
 	delete targetProvider;
 	delete ballisticSolver;
-
-	delete[] targetStates;
 }
 
 void MissionProcessor::clearMission() {
 	stepIndex = 0;
 	simulationTime = 0.f;
 
-	delete[] targetStates;
-	targetStates = nullptr;
+	targetStates.clear();
 
 	simulationStorage.reset();
 }
 
 void MissionProcessor::initMission() {
 	droneState = DroneState{ configLoader->getConfig().drone };
-	targetStates = new TargetState[targetProvider->getTargetCount()];
+
+	targetStates.resize(targetProvider->getTargetCount());
 }
 
 DroneState MissionProcessor::updateDrone(

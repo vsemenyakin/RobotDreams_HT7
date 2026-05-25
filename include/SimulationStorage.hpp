@@ -2,23 +2,18 @@
 
 #include "CommonTypes.hpp"
 
+#include <vector>
+
 class SimulationStorage
 {
 public:
-	SimulationStorage();
+	SimulationStorage() = default;
 
 	void addState(const DroneState& inState);
 	void reset();
 
 	void writeToJSONFile(const char* inFileName) const;
 
-	~SimulationStorage();
-
 private:
-	void resizeIfNeeded();
-
-	static constexpr size_t statesReserveMultiplier = 10;
-
-	DroneState* states = nullptr;
-	size_t statesNumber = 0;
+	std::vector<DroneState> states;
 };
