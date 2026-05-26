@@ -174,3 +174,10 @@ public:
 private:
 	std::map<std::string, AmmoParams> paramsMap{ };
 };
+
+// -----------------------------------------------
+
+struct TargetState
+{
+	Coord position;
+};

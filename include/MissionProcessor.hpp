@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "TargetProvider.hpp" //for TargetState
 #include "CommonTypes.hpp"
 #include "SimulationStorage.hpp"
 
@@ -8,6 +7,7 @@
 #include <vector>
 
 class IConfigLoader;
+class ITargetProvider;
 class IBallisticSolver;
 
 class MissionProcessor {

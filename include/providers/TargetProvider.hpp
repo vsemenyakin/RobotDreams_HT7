@@ -2,11 +2,6 @@
 
 #include "CommonTypes.hpp"
 
-struct TargetState
-{
-	Coord position;
-};
-
 // -------------
 
 class ITargetProvider {

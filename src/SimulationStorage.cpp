@@ -1,5 +1,7 @@
 ﻿#include "SimulationStorage.hpp"
 
+#include <fstream>
+
 void SimulationStorage::addState(const DroneState& inState)
 {
 	states.push_back(inState);
