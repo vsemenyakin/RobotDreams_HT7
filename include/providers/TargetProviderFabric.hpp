@@ -1,10 +1,6 @@
 ﻿#pragma once
 
-#include "interfaces/ITargetProvider.hpp"
-
-ITargetProvider* createJSONTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep);
-
-// ---------------
+#include "providers/JSONConfigTargetProvider.hpp"
 
 enum class ProviderType
 {

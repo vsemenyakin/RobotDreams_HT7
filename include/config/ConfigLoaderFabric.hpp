@@ -1,10 +1,6 @@
 ﻿#pragma once
 
-#include "interfaces/IConfigLoader.hpp"
-
-IConfigLoader* createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName);
-
-// ---------------
+#include "config/FileConfigLoader.hpp"
 
 enum class LoaderType
 {

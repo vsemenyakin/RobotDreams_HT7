@@ -1,4 +1,4 @@
-﻿#include "solvers/BallisticSolver.hpp"
+﻿#include "solvers/SimpleBallisticSolver.hpp"
 
 #define _USE_MATH_DEFINES
 #include <math.h>

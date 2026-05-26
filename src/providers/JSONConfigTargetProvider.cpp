@@ -1,4 +1,4 @@
-﻿#include "providers/TargetProvider.hpp"
+﻿#include "providers/JSONConfigTargetProvider.hpp"
 
 #include "json.hpp"
 

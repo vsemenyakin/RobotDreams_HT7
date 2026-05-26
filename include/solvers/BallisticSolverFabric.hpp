@@ -1,10 +1,6 @@
 ﻿#pragma once
 
-#include "interfaces/IBallisticSolver.hpp"
-
-IBallisticSolver* createSimpleBallisticSolver();
-
-// ---------------
+#include "solvers/SimpleBallisticSolver.hpp"
 
 enum class SolverType
 {

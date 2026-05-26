@@ -7,18 +7,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(ballistics_calculator
-	src/solvers/BallisticSolver.cpp
-	include/solvers/BallisticSolver.hpp
+	src/solvers/SimpleBallisticSolver.cpp
+	include/solvers/SimpleBallisticSolver.hpp
+	include/solvers/BallisticSolverFabric.hpp
 	src/CommonTypes.cpp
 	include/CommonTypes.hpp
-	src/config/ConfigLoader.cpp
-	include/config/ConfigLoader.hpp
+	src/config/FileConfigLoader.cpp
+	include/config/FileConfigLoader.hpp
+	include/config/ConfigLoaderFabric.hpp
 	include/json.hpp
 	src/main.cpp
 	src/SimulationStorage.cpp
 	include/SimulationStorage.hpp
-	src/providers/TargetProvider.cpp
-	include/providers/TargetProvider.hpp
+	src/providers/JSONConfigTargetProvider.cpp
+	include/providers/JSONConfigTargetProvider.hpp
+	include/providers/TargetProviderFabric.hpp
 	include/Utils.hpp
 	include/MissionProcessor.hpp
 	src/MissionProcessor.cpp

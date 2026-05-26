@@ -1,7 +1,7 @@
 ﻿#include "MissionProcessor.hpp"
-#include "config/ConfigLoader.hpp"
-#include "providers/TargetProvider.hpp"
-#include "solvers/BallisticSolver.hpp"
+#include "config/ConfigLoaderFabric.hpp"
+#include "providers/TargetProviderFabric.hpp"
+#include "solvers/BallisticSolverFabric.hpp"
 #include "Utils.hpp"
 
 MissionProcessor::MissionProcessor(
