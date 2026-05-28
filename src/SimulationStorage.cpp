@@ -12,7 +12,7 @@ void SimulationStorage::reset()
 	states.clear();
 }
 
-void SimulationStorage::writeToJSONFile(const char* inFileName) const
+void SimulationStorage::writeToJSONFile(const std::string& inFileName) const
 {
 	json resultJSON{ };
 

@@ -126,7 +126,7 @@ void SimulationConfig::print() const
 
 //-----------------------------------------------
 
-Config Config::createFromJSONFile(const char* inFileName)
+Config Config::createFromJSONFile(const std::string& inFileName)
 {
 	Config result;
 
@@ -138,7 +138,7 @@ Config Config::createFromJSONFile(const char* inFileName)
 	return result;
 }
 
-void Config::writeToJSONFile(const char* inFileName) const
+void Config::writeToJSONFile(const std::string& inFileName) const
 {
 	json outputJSON{ };
 	outputJSON = *this;
@@ -191,11 +191,14 @@ DroneState::DroneState(const DroneConfig& inConfig)
 	dropPoint = {};
 	aimPoint = {};
 	predictedTarget = {};
+
+	acceleration = powf(inConfig.attackSpeed, 2) / (2 * inConfig.accelerationPath);
+	angularSpeed = inConfig.angularSpeed;
 }
 
 //-----------------------------------------------
 
-AmmoConfig AmmoConfig::createFromJSONFile(const char* inFileName)
+AmmoConfig AmmoConfig::createFromJSONFile(const std::string& inFileName)
 {
 	AmmoConfig result;
 

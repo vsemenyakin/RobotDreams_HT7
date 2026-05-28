@@ -3,6 +3,7 @@
 #include "CommonTypes.hpp"
 
 #include <vector>
+#include <string>
 
 class SimulationStorage
 {
@@ -12,7 +13,7 @@ public:
 	void addState(const DroneState& inState);
 	void reset();
 
-	void writeToJSONFile(const char* inFileName) const;
+	void writeToJSONFile(const std::string& inFileName) const;
 
 private:
 	std::vector<DroneState> states;

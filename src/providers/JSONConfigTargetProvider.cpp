@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
+#include <string>
 
 using json = nlohmann::json;
 
@@ -20,7 +21,7 @@ public:
 private:
 	struct TargetsConfig
 	{
-		static TargetsConfig createFromJSONFile(const char* inFileName);
+		static TargetsConfig createFromJSONFile(const std::string& inFileName);
 
 	#ifdef DebugPrint
 		void print() const;
@@ -59,7 +60,7 @@ TargetState JSONConfigTargetProvider::getTarget(const int inIndex, const float i
 	return getTargetStateAtTime(config, inIndex, inSimulationTime, targetArrayTimeStep);
 }
 
-JSONConfigTargetProvider::TargetsConfig JSONConfigTargetProvider::TargetsConfig::createFromJSONFile(const char* inFileName)
+JSONConfigTargetProvider::TargetsConfig JSONConfigTargetProvider::TargetsConfig::createFromJSONFile(const std::string& inFileName)
 {
 	TargetsConfig result;
 

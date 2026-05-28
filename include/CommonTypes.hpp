@@ -101,9 +101,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SimulationConfig,
 
 struct Config
 {
-	static Config createFromJSONFile(const char* inFileName);
+	static Config createFromJSONFile(const std::string& inFileName);
 
-	void writeToJSONFile(const char* inFileName) const;
+	void writeToJSONFile(const std::string& inFileName) const;
 
 #ifdef DebugPrint
 	void print() const;
@@ -156,6 +156,9 @@ struct DroneState
 	Coord dropPoint{ };
 	Coord aimPoint{ };
 	Coord predictedTarget{ };
+
+	float acceleration{ 0.f };
+	float angularSpeed{ 0.f };
 };
 
 // -----------------------------------------------
@@ -163,7 +166,7 @@ struct DroneState
 class AmmoConfig
 {
 public:
-	static AmmoConfig createFromJSONFile(const char* inFileName);
+	static AmmoConfig createFromJSONFile(const std::string& inFileName);
 
 	const AmmoParams* getParams(const std::string& inParamsName) const;
 
