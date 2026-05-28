@@ -4,6 +4,8 @@
 #include "solvers/BallisticSolverFabric.hpp"
 #include "Utils.hpp"
 
+#include <limits>
+
 MissionProcessor::MissionProcessor(
 		const char* inAmmoConfigFileName,
 		const char* inConfigFileName,
@@ -18,6 +20,28 @@ MissionProcessor::MissionProcessor(
 
 bool MissionProcessor::hasNext() const {
 	return (stepIndex < MissionProcessor::maxSteps);
+}
+
+float getTimeOfMovement(const float distance, const float initialVelocity, const float acceleration) {
+	if (equals(acceleration, 0.f)) {
+		return distance / initialVelocity;
+	}
+
+	return -initialVelocity / acceleration + std::sqrt(powf(initialVelocity, 2) + 2 * acceleration * distance) / acceleration;
+}
+
+float predictTimeToTarget(const Coord& targetPosition, const DroneState& droneState, const float AmmoFlightDistance) {
+	const Coord toTarget = targetPosition - droneState.position;
+	const float distanceToTarget = toTarget.length();
+	const float angleToTarget = toTarget.angle();
+
+	const float deltaAngle = std::abs(angleToTarget - droneState.direction);
+	const float timeForRotation = deltaAngle / droneState.angularSpeed;
+
+	const float distanceToDrop = distanceToTarget - AmmoFlightDistance;
+	const float timeForDirectMove = getTimeOfMovement(distanceToDrop, droneState.velocity, droneState.acceleration);
+
+	return timeForRotation + timeForDirectMove;
 }
 
 void MissionProcessor::step() {
@@ -35,11 +59,6 @@ void MissionProcessor::step() {
 
 	if (droneAIState.previousTargetState.has_value()) {
 
-		const Coord targetVelocity = (currentTargetState.position - droneAIState.previousTargetState->position) / config.targetArrayTimeStep;
-
-		const Coord toTarget = currentTargetState.position - droneState.position;
-		const float distanceToTarget = toTarget.length();
-		
 		float flightTime;
 		float horizontalDistance;
 		ballisticSolver->computeAmmoDrop(
@@ -47,26 +66,53 @@ void MissionProcessor::step() {
 			droneConfig.attackSpeed,
 			droneConfig.altitude,
 			ammoParams);
-		
-		const float timeToDrop = (distanceToTarget - horizontalDistance) / droneConfig.attackSpeed;
 
-		droneState.predictedTarget = currentTargetState.position + targetVelocity * timeToDrop;
+		if (!droneAIState.currentAimingPosition.has_value()) {
 
-		const float targetDirection = toTarget.angle();
+			const Coord targetVelocity = (currentTargetState.position - droneAIState.previousTargetState->position) / config.targetArrayTimeStep;
 
-		if (targetDirection < droneState.direction) {
-			droneState.targetAngle = targetDirection;
-			droneState.state = EDroneState::TURNING_MINUS;
-		}
-		else if (targetDirection > droneState.direction) {
-			droneState.targetAngle = targetDirection;
-			droneState.state = EDroneState::TURNING_PLUS;
-		}
-		else {
-			droneState.state = EDroneState::ACCELERATING;
+			Coord predictedTargetPosition = currentTargetState.position;
+			const float targetSearchingTimeStep = configLoader->getConfig().simulation.timeStep;
+			float lastDistanceBetweenRealAndPredicted = std::numeric_limits<float>::max();
+			do
+			{
+				const float predictedTimeToTarget = predictTimeToTarget(predictedTargetPosition, droneState, horizontalDistance);
+				Coord realTargetPositionAtPredictedTime = currentTargetState.position + targetVelocity * predictedTimeToTarget;
 
-			if (equals(distanceToTarget, horizontalDistance, config.simulation.hitRadius)) {
-				droneState.dropPoint = droneState.position;
+				Coord toTarget = realTargetPositionAtPredictedTime - predictedTargetPosition;
+				const float distanceBetweenRealAndPredicted = toTarget.length();
+
+				if (distanceBetweenRealAndPredicted > lastDistanceBetweenRealAndPredicted) {
+					break;
+				}
+
+				lastDistanceBetweenRealAndPredicted = distanceBetweenRealAndPredicted;
+				predictedTargetPosition = predictedTargetPosition + targetVelocity * targetSearchingTimeStep;
+			} while (true);
+
+			droneAIState.currentAimingPosition = predictedTargetPosition;
+
+			droneState.predictedTarget = predictedTargetPosition;
+		} else {
+			const Coord toAimingPosition = droneAIState.currentAimingPosition.value() - droneState.position;
+			const float distanceToAimingPosition = toAimingPosition.length();
+
+			const float direction = toAimingPosition.angle();
+
+			if (direction < droneState.direction) {
+				droneState.targetAngle = direction;
+				droneState.state = EDroneState::TURNING_MINUS;
+			}
+			else if (direction > droneState.direction) {
+				droneState.targetAngle = direction;
+				droneState.state = EDroneState::TURNING_PLUS;
+			}
+			else {
+				droneState.state = EDroneState::ACCELERATING;
+
+				if (distanceToAimingPosition <= horizontalDistance) {
+					droneState.dropPoint = droneState.position;
+				}
 			}
 		}
 	}
@@ -128,7 +174,7 @@ DroneState MissionProcessor::updateDrone(
 {
 	DroneState nextState = state;
 
-	const float a = powf(droneConfig.attackSpeed, 2) / (2 * droneConfig.accelerationPath);
+	const float a = state.acceleration;
 
 	//Here state - is like "target" state
 	switch (state.state)
