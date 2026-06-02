@@ -72,6 +72,9 @@ public:
 		if (nextState.velocity >= inConfigs.droneConfig.attackSpeed) {
 			nextState.velocity = inConfigs.droneConfig.attackSpeed;
 
+			const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+			nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
+
 			inoutDroneState = nextState;
 			
 			return std::make_unique<MovingState>();
@@ -99,6 +102,9 @@ public:
 		nextState.velocity = inoutDroneState.velocity - inoutDroneState.acceleration * inConfigs.simulationConfig.timeStep;
 		if (nextState.velocity <= 0.f) {
 			nextState.velocity = 0.f;
+
+			const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+			nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
 
 			inoutDroneState = nextState;
 
