@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <vector>
+#include <memory>
 
 class IConfigLoader;
 class ITargetProvider;
@@ -25,7 +26,7 @@ public:
 	void step();
 	void reset();
 
-	void changeSolver(IBallisticSolver* newSolver);
+	void changeSolver(std::unique_ptr<IBallisticSolver> newSolver);
 
 	void writeResults(const char* inFileName);
 
@@ -40,9 +41,9 @@ private:
 		const DroneConfig& droneConfig,
 		const SimulationConfig& simulationConfig);
 
-	IConfigLoader* configLoader{ nullptr };
-	ITargetProvider* targetProvider{ nullptr };
-	IBallisticSolver* ballisticSolver{ nullptr };
+	std::unique_ptr<IConfigLoader> configLoader{ nullptr };
+	std::unique_ptr<ITargetProvider> targetProvider{ nullptr };
+	std::unique_ptr<IBallisticSolver> ballisticSolver{ nullptr };
 
 	size_t stepIndex{ 0 };
 	float simulationTime{ 0 };

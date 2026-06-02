@@ -2,7 +2,8 @@
 
 #include "interfaces/IBallisticSolver.hpp"
 
-IBallisticSolver* createSimpleBallisticSolver();
+#include <memory>
 
+std::unique_ptr<IBallisticSolver> createSimpleBallisticSolver();
 
 

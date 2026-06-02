@@ -8,7 +8,7 @@ enum class ProviderType
 };
 
 template<typename ... Args>
-ITargetProvider* createProvider(ProviderType type, Args&& ... args) {
+std::unique_ptr<ITargetProvider> createProvider(ProviderType type, Args&& ... args) {
 	switch(type) {
 		case ProviderType::JSON:
 			return createJSONTargetProvider(std::forward<Args>(args)...);

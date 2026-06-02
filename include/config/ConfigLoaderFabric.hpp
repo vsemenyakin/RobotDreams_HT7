@@ -8,7 +8,7 @@ enum class LoaderType
 };
 
 template<typename ... Args>
-IConfigLoader* createLoader(LoaderType type, Args&& ... args) {
+std::unique_ptr<IConfigLoader> createLoader(LoaderType type, Args&& ... args) {
 	switch(type) {
 		case LoaderType::FILE:
 			return createFileConfigLoader(std::forward<Args>(args)...);

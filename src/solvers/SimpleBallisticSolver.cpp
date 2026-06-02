@@ -73,6 +73,6 @@ void SimpleBallisticSolver::computeAmmoDrop(
 
 // ---------------
 
-IBallisticSolver* createSimpleBallisticSolver() {
-	return new SimpleBallisticSolver();
+std::unique_ptr<IBallisticSolver> createSimpleBallisticSolver() {
+	return std::make_unique<SimpleBallisticSolver>();
 }

@@ -136,20 +136,12 @@ void MissionProcessor::reset() {
 	initMission();
 }
 
-void MissionProcessor::changeSolver(IBallisticSolver* newSolver) {
-	delete ballisticSolver;
-	
-	ballisticSolver = newSolver;
+void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> newSolver) {
+	ballisticSolver = std::move(newSolver);
 }
 
 void MissionProcessor::writeResults(const char* inFileName) {
 	simulationStorage.writeToJSONFile(inFileName);
-}
-
-MissionProcessor::~MissionProcessor() {
-	delete configLoader;
-	delete targetProvider;
-	delete ballisticSolver;
 }
 
 void MissionProcessor::clearMission() {
@@ -231,3 +223,5 @@ DroneState MissionProcessor::updateDrone(
 
 	return nextState;
 }
+
+MissionProcessor::~MissionProcessor() = default;

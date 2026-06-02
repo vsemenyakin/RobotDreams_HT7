@@ -2,4 +2,6 @@
 
 #include "interfaces/IConfigLoader.hpp"
 
-IConfigLoader* createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName);
+#include <memory>
+
+std::unique_ptr<IConfigLoader> createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName);

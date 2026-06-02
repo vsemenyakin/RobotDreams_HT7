@@ -137,6 +137,6 @@ TargetState JSONConfigTargetProvider::getTargetStateAtTime(
 
 //Factory function
 
-ITargetProvider* createJSONTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep) {
-	return new JSONConfigTargetProvider(inConfigFileName, inTargetArrayTimeStep);
+std::unique_ptr<ITargetProvider> createJSONTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep) {
+	return std::make_unique<JSONConfigTargetProvider>(inConfigFileName, inTargetArrayTimeStep);
 }

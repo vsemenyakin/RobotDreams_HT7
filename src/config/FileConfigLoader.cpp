@@ -32,6 +32,6 @@ const Config& FileConfigLoader::getConfig() const {
 
 // --------------
 
-IConfigLoader* createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName) {
-	return new FileConfigLoader(inAmmoConfigFileName, inConfigFileName);
+std::unique_ptr<IConfigLoader> createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName) {
+	return std::make_unique<FileConfigLoader>(inAmmoConfigFileName, inConfigFileName);
 }

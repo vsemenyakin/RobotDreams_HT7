@@ -8,7 +8,7 @@ enum class SolverType
 };
  
 template<typename ... Args>
-IBallisticSolver* createSolver(SolverType type, Args&& ... args) {
+std::unique_ptr<IBallisticSolver> createSolver(SolverType type, Args&& ... args) {
 	switch(type) {
 		case SolverType::ANALYTICAL:
 			return createSimpleBallisticSolver();
