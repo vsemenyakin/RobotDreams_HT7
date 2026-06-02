@@ -10,6 +10,7 @@
 class IConfigLoader;
 class ITargetProvider;
 class IBallisticSolver;
+class IDroneState;
 
 class MissionProcessor {
 private:
@@ -36,8 +37,9 @@ private:
 	void clearMission();
 	void initMission();
 
-	static DroneState updateDrone(
-		const DroneState& state,
+	static void updateDrone(
+		DroneState& state,
+		std::unique_ptr<IDroneState>& SM_droneState,
 		const DroneConfig& droneConfig,
 		const SimulationConfig& simulationConfig);
 
@@ -49,6 +51,7 @@ private:
 	float simulationTime{ 0 };
 
 	DroneState droneState{ };
+	std::unique_ptr<IDroneState> SM_droneState{ };
 	std::vector<TargetState> targetStates{ };
 
 	struct DroneAIState
