@@ -32,8 +32,6 @@ class StoppedState : public IDroneState {
 public:
     std::unique_ptr<IDroneState> execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) override
 	{
-		inoutDroneState.state = EDroneState::STOPPED;
-
 		//Drone stopped - no any changes
 		// for dynamic properties are needed
 		return nullptr;
@@ -75,7 +73,6 @@ public:
 			nextState.velocity = inConfigs.droneConfig.attackSpeed;
 
 			inoutDroneState = nextState;
-			inoutDroneState.state = EDroneState::MOVING;
 			
 			return std::make_unique<MovingState>();
 		}
@@ -84,7 +81,6 @@ public:
 		nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
 
 		inoutDroneState = nextState;
-		inoutDroneState.state = EDroneState::ACCELERATING;
 
 		return nullptr;
 	}
@@ -105,7 +101,6 @@ public:
 			nextState.velocity = 0.f;
 
 			inoutDroneState = nextState;
-			inoutDroneState.state = EDroneState::STOPPED;
 
 			return std::make_unique<StoppedState>();
 		}
@@ -114,7 +109,6 @@ public:
 		nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
 
 		inoutDroneState = nextState;
-		inoutDroneState.state = EDroneState::DECELERATING;
 
 		return nullptr;
 	}
@@ -139,14 +133,12 @@ public:
 			nextState.direction = inoutDroneState.targetAngle;
 
 			inoutDroneState = nextState;
-			inoutDroneState.state = EDroneState::STOPPED;
 
 			//Stopped because drone can rotate only when stopped
 			return std::make_unique<StoppedState>();
 		}
 
 		inoutDroneState = nextState;
-		inoutDroneState.state = EDroneState::TURNING_PLUS;
 
 		return nullptr;
 	}
@@ -171,14 +163,12 @@ public:
 			nextState.direction = inoutDroneState.targetAngle;
 
 			inoutDroneState = nextState;
-			inoutDroneState.state = EDroneState::STOPPED;
 
 			//Stopped because drone can rotate only when stopped
 			return std::make_unique<StoppedState>();
 		}
 
 		inoutDroneState = nextState;
-		inoutDroneState.state = EDroneState::TURNING_MINUS;
 
 		return nullptr;
 	}
