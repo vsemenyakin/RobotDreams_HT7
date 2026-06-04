@@ -5,5 +5,3 @@
 #include <memory>
 
 std::unique_ptr<IBallisticSolver> createSimpleBallisticSolver();
-
-

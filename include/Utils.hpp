@@ -16,4 +16,3 @@ bool equals(const float value1, const float value2, const float precision = 0.00
 {
 	return std::abs(value1 - value2) < precision;
 }
-
