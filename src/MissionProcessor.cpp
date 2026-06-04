@@ -17,9 +17,6 @@ class IDroneState {
 public:
     virtual ~IDroneState() = default;
  
-    // Виконати логіку стану, повернути наступний стан.
-    // Якщо стан не змінився — повернути nullptr
-    // (головний цикл залишить поточний).
     virtual std::unique_ptr<IDroneState>
         execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) = 0;
  
@@ -47,8 +44,6 @@ public:
 	virtual std::unique_ptr<IDroneState>
 		execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs)
 	{
-		//Drone stopped - no any changes
-		// for dynamic properties are needed
 		DroneState nextState = inoutDroneState;
 
 		const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
