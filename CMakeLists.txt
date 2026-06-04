@@ -27,6 +27,8 @@ add_executable(ballistics_calculator
 	src/MissionProcessor.cpp
 	include/interfaces/IBallisticSolver.hpp
 	include/interfaces/IConfigLoader.hpp
-	include/interfaces/ITargetProvider.hpp)
+	include/interfaces/ITargetProvider.hpp
+	include/solvers/TableBallisticSolver.hpp
+	src/solvers/TableBallisticSolver.cpp)
 
 target_include_directories(ballistics_calculator PUBLIC include)
