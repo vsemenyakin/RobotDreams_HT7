@@ -1,9 +1,11 @@
-﻿#include "TargetProvider.hpp"
-#include "JSONUtils.hpp"
+﻿#include "providers/JSONConfigTargetProvider.hpp"
 
 #include "json.hpp"
 
+#include <fstream>
+#include <vector>
 #include <cassert>
+#include <string>
 
 using json = nlohmann::json;
 
@@ -19,17 +21,16 @@ public:
 private:
 	struct TargetsConfig
 	{
-		static TargetsConfig createFromJSONFile(const char* inFileName);
+		static TargetsConfig createFromJSONFile(const std::string& inFileName);
 
 	#ifdef DebugPrint
 		void print() const;
 	#endif
 
-		~TargetsConfig();
+		size_t getTargetCount() const { return targetsPositions.size(); }
+		size_t getTimeSteps() const { return targetsPositions[0].size(); }
 
-		size_t targetCount{ 0 };
-		size_t timeSteps{ 0 };
-		Coord** targetsPositions{ nullptr };
+		std::vector<std::vector<Coord>> targetsPositions{ };
 	};
 
 	TargetState getTargetStateAtTime(
@@ -51,36 +52,41 @@ JSONConfigTargetProvider::JSONConfigTargetProvider(const char* inConfigFileName,
 }
 
 size_t JSONConfigTargetProvider::getTargetCount() {
-	return config.targetCount;
+	return config.getTargetCount();
 }
 
 TargetState JSONConfigTargetProvider::getTarget(const int inIndex, const float inSimulationTime) {
-	assert(inIndex < config.targetCount);
+	assert(inIndex < getTargetCount());
 	return getTargetStateAtTime(config, inIndex, inSimulationTime, targetArrayTimeStep);
 }
 
-JSONConfigTargetProvider::TargetsConfig JSONConfigTargetProvider::TargetsConfig::createFromJSONFile(const char* inFileName)
+JSONConfigTargetProvider::TargetsConfig JSONConfigTargetProvider::TargetsConfig::createFromJSONFile(const std::string& inFileName)
 {
 	TargetsConfig result;
 
 	std::fstream inputFile{ inFileName };
 	json jsonData = json::parse(inputFile);
 
-	result.timeSteps = jsonData["timeSteps"];
-	result.targetCount = jsonData["targetCount"];
+	const size_t targetsCountForTest = jsonData["targetCount"];
+	const size_t timeStepsForTest = jsonData["timeSteps"];
 
 	json targetsJSON = jsonData["targets"];
-	const size_t targetsNum = targetsJSON.size();
-	assert(targetsNum == result.targetCount);
-	result.targetsPositions = new Coord*[targetsNum];
-	for (size_t index = 0; index < targetsNum; ++index)
+	const size_t targetsCount = targetsJSON.size();
+	assert(targetsCount > 0 && targetsCount == targetsCountForTest);
+	for (size_t index = 0; index < targetsCount; ++index)
 	{
 		const json& targetObjectJSON = targetsJSON[index];
 		const json& targetPositionsJSON = targetObjectJSON["positions"];
 
-		size_t arraySize;
-		readArrayFromJSON(result.targetsPositions[index], arraySize, targetPositionsJSON);
-		assert(arraySize == result.timeSteps);
+		std::vector<Coord> targetPositions;
+		const size_t timeSteps = targetPositionsJSON.size();
+		assert(timeSteps > 0 && timeSteps == timeStepsForTest);
+		for (size_t positionIndex = 0; positionIndex < timeSteps; ++positionIndex)
+		{
+			const Coord position = targetPositionsJSON[positionIndex];
+			targetPositions.push_back(position);
+		}
+		result.targetsPositions.push_back(targetPositions);
 	}
 
 	return result;
@@ -107,32 +113,17 @@ void ConfigTargetProvider::TargetsConfig::print() const
 }
 #endif //DebugPrint
 
-JSONConfigTargetProvider::TargetsConfig::~TargetsConfig()
-{
-	if (targetsPositions != nullptr)
-	{
-		for (size_t targetIndex = 0; targetIndex < targetCount; ++targetIndex)
-		{
-			assert(targetsPositions[targetIndex] != nullptr);
-			delete[] targetsPositions[targetIndex];
-		}
-
-		delete[] targetsPositions;
-	}
-}
-
 TargetState JSONConfigTargetProvider::getTargetStateAtTime(
 	const TargetsConfig& inConfig,
 	const size_t targetIndex,
 	const float inSimulationTime,
 	const float inArrayTimeStep)
 {
-	assert(targetIndex < inConfig.targetCount);
-
 	TargetState result;
 
-	int currentPositionIndex = static_cast<int>(floor(inSimulationTime / inArrayTimeStep)) % inConfig.timeSteps;
-	int nextPositionIndex = (currentPositionIndex + 1) % inConfig.timeSteps;
+	const size_t timeSteps = inConfig.getTimeSteps();
+	int currentPositionIndex = static_cast<int>(floor(inSimulationTime / inArrayTimeStep)) % timeSteps;
+	int nextPositionIndex = (currentPositionIndex + 1) % timeSteps;
 
 	float frac = (inSimulationTime - currentPositionIndex * inArrayTimeStep) / inArrayTimeStep;
 

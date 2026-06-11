@@ -1,17 +1,18 @@
 ﻿#pragma once
 
-#include "TargetProvider.hpp" //for TargetState
 #include "CommonTypes.hpp"
 #include "SimulationStorage.hpp"
 
 #include <optional>
+#include <vector>
 
 class IConfigLoader;
+class ITargetProvider;
 class IBallisticSolver;
 
 class MissionProcessor {
 private:
-	static constexpr size_t maxSteps = 10;
+	static constexpr size_t maxSteps = 10000;
 
 public:
 	MissionProcessor(
@@ -47,11 +48,12 @@ private:
 	float simulationTime{ 0 };
 
 	DroneState droneState{ };
-	TargetState* targetStates{ nullptr };
+	std::vector<TargetState> targetStates{ };
 
 	struct DroneAIState
 	{
 		std::optional<TargetState> previousTargetState{ };
+		std::optional<Coord> currentAimingPosition{ };
 	};
 	DroneAIState droneAIState{ };
 

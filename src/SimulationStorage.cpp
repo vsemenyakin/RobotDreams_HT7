@@ -1,38 +1,26 @@
 ﻿#include "SimulationStorage.hpp"
 
-SimulationStorage::SimulationStorage()
-{
-	states = new DroneState[statesReserveMultiplier];
-}
+#include <fstream>
 
 void SimulationStorage::addState(const DroneState& inState)
 {
-	resizeIfNeeded();
-
-	states[statesNumber] = inState;
-
-	++statesNumber;
+	states.push_back(inState);
 }
 
 void SimulationStorage::reset()
 {
-	delete[] states;
-	
-	states = new DroneState[statesReserveMultiplier];
-	statesNumber = 0;
+	states.clear();
 }
 
-void SimulationStorage::writeToJSONFile(const char* inFileName) const
+void SimulationStorage::writeToJSONFile(const std::string& inFileName) const
 {
 	json resultJSON{ };
 
-	resultJSON["totalSteps"] = statesNumber;
+	resultJSON["totalSteps"] = states.size();
 
 	json stepsJSON = json::array();
-	for (size_t stateIndex = 0; stateIndex < statesNumber; ++stateIndex)
+	for (const DroneState& state : states)
 	{
-		const DroneState& state = states[stateIndex];
-
 		json stepJSON = json::object();
 		stepJSON["position"] = state.position;
 		stepJSON["direction"] = state.direction;
@@ -49,25 +37,4 @@ void SimulationStorage::writeToJSONFile(const char* inFileName) const
 
 	std::ofstream outputFile{ inFileName };
 	outputFile << resultJSON.dump(2);
-}
-
-SimulationStorage::~SimulationStorage()
-{
-	delete[] states;
-}
-
-void SimulationStorage::resizeIfNeeded()
-{
-	const size_t freeSpaceLeft = statesNumber % statesReserveMultiplier;
-	if (freeSpaceLeft != 0)
-		return;
-
-	DroneState* newStates = new DroneState[statesNumber + statesReserveMultiplier];
-	for (size_t stateIndex = 0; stateIndex < statesNumber; ++stateIndex)
-	{
-		newStates[stateIndex] = states[stateIndex];
-	}
-
-	delete[] states;
-	states = newStates;
 }
