@@ -23,6 +23,7 @@ add_executable(ballistics_calculator
 	src/providers/JSONConfigTargetProvider.cpp
 	include/providers/JSONConfigTargetProvider.hpp
 	include/providers/TargetProviderFabric.hpp
+	src/providers/TargetProviderFabric.cpp
 	include/Utils.hpp
 	include/MissionProcessor.hpp
 	src/MissionProcessor.cpp

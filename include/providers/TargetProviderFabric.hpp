@@ -1,20 +1,14 @@
 ﻿#pragma once
 
-#include "providers/JSONConfigTargetProvider.hpp"
+#include "interfaces/ITargetProvider.hpp"
+
+#include <any>
 
 enum class ProviderType
 {
 	JSON
 };
 
-template<typename ... Args>
-std::unique_ptr<ITargetProvider> createProvider(ProviderType type, Args&& ... args) {
-	switch(type) {
-		case ProviderType::JSON:
-			return createJSONTargetProvider(std::forward<Args>(args)...);
-		
-		default:
-			assert(false && "Unknown provider type");
-			return nullptr;
-	}
-}
+std::unique_ptr<ITargetProvider> createProvider(ProviderType type,
+	const std::any& firstArg = {},
+	const std::any& secondArg = {});

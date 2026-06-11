@@ -3,5 +3,7 @@
 #include "interfaces/ITargetProvider.hpp"
 
 #include <memory>
+#include <string>
 
-std::unique_ptr<ITargetProvider> createJSONTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep);
+std::unique_ptr<ITargetProvider> createJSONTargetProvider(
+    const std::string& inConfigFileName, const float inTargetArrayTimeStep);
