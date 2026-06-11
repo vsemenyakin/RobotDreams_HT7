@@ -1,20 +1,15 @@
 ﻿#pragma once
 
-#include "config/FileConfigLoader.hpp"
+#include "interfaces/IConfigLoader.hpp"
+
+#include <any>
+#include <memory>
 
 enum class LoaderType
 {
 	FILE
 };
 
-template<typename ... Args>
-std::unique_ptr<IConfigLoader> createLoader(LoaderType type, Args&& ... args) {
-	switch(type) {
-		case LoaderType::FILE:
-			return createFileConfigLoader(std::forward<Args>(args)...);
-		
-		default:
-			assert(false && "Unknown loader type");
-			return nullptr;
-	}
-}
+std::unique_ptr<IConfigLoader> createLoader(LoaderType type,
+	const std::any& firstArg = {},
+	const std::any& secondArg = {});

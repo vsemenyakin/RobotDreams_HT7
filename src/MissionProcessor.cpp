@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 
 #include <limits>
+#include <assert.h>
 
 ///////////////////////////////////////////////////////////// State machine {{{
 
@@ -185,6 +186,8 @@ MissionProcessor::MissionProcessor(
 		const char* inTargetsFileName)
 {
 	configLoader = createLoader(LoaderType::FILE, inAmmoConfigFileName, inConfigFileName);
+	assert(configLoader && "Failed to create config loader");
+
 	targetProvider = createProvider(ProviderType::JSON, inTargetsFileName, configLoader->getConfig().targetArrayTimeStep);
 	ballisticSolver = createSolver(SolverType::TABLE, "ballistic_table.txt");
 

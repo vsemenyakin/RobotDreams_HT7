@@ -1,10 +1,11 @@
 ﻿#include "config/FileConfigLoader.hpp"
+#include "interfaces/IConfigLoader.hpp"
 
 // ---------------
 
 class FileConfigLoader : public IConfigLoader {
 public:
-	FileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName);
+	FileConfigLoader(const std::string& inAmmoConfigFileName, const std::string& inConfigFileName);
 
 	const AmmoConfig& getAmmoConfig() const override;
 	const Config& getConfig() const override;
@@ -16,7 +17,7 @@ private:
 
 // --------------
 
-FileConfigLoader::FileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName) :
+FileConfigLoader::FileConfigLoader(const std::string& inAmmoConfigFileName, const std::string& inConfigFileName) :
 	ammoConfig(AmmoConfig::createFromJSONFile(inAmmoConfigFileName)),
 	config(Config::createFromJSONFile(inConfigFileName))
 {
@@ -32,6 +33,9 @@ const Config& FileConfigLoader::getConfig() const {
 
 // --------------
 
-std::unique_ptr<IConfigLoader> createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName) {
+std::unique_ptr<IConfigLoader> createFileConfigLoader(
+	const std::string& inAmmoConfigFileName,
+	const std::string& inConfigFileName)
+{
 	return std::make_unique<FileConfigLoader>(inAmmoConfigFileName, inConfigFileName);
 }
