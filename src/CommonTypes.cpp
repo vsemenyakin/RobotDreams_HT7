@@ -161,22 +161,6 @@ void Config::print() const
 
 //-----------------------------------------------
 
-const char* toString(const EDroneState inDroneState)
-{
-	switch (inDroneState)
-	{
-		case STOPPED:        return "STOPPED";
-		case ACCELERATING:   return "ACCELERATING";
-		case DECELERATING:   return "DECELERATING";
-		case TURNING_PLUS:   return "TURNING_PLUS";
-		case TURNING_MINUS:  return "TURNING_MINUS";
-		case MOVING:         return "MOVING";
-		default:             return "<unknown>";
-	}
-}
-
-//-----------------------------------------------
-
 DroneState::DroneState(const DroneConfig& inConfig)
 {
 	position = inConfig.position;
@@ -184,7 +168,6 @@ DroneState::DroneState(const DroneConfig& inConfig)
 
 	velocity = 0.f;
 
-	EDroneState state = STOPPED;
 	targetAngle = 0.f;
 
 	targetIndex = 0;

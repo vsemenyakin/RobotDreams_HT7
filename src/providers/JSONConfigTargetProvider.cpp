@@ -13,7 +13,7 @@ using json = nlohmann::json;
 
 class JSONConfigTargetProvider : public ITargetProvider {
 public:
-	JSONConfigTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep);
+	JSONConfigTargetProvider(const std::string& inConfigFileName, const float inTargetArrayTimeStep);
 
 	size_t getTargetCount() override;
 	TargetState getTarget(const int inIndex, const float inSimulationTime) override;
@@ -45,7 +45,7 @@ private:
 
 // ----------------
 
-JSONConfigTargetProvider::JSONConfigTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep) :
+JSONConfigTargetProvider::JSONConfigTargetProvider(const std::string& inConfigFileName, const float inTargetArrayTimeStep) :
 	config(TargetsConfig::createFromJSONFile(inConfigFileName)),
 	targetArrayTimeStep(inTargetArrayTimeStep)
 {
@@ -137,6 +137,6 @@ TargetState JSONConfigTargetProvider::getTargetStateAtTime(
 
 //Factory function
 
-ITargetProvider* createJSONTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep) {
-	return new JSONConfigTargetProvider(inConfigFileName, inTargetArrayTimeStep);
+std::unique_ptr<ITargetProvider> createJSONTargetProvider(const std::string& inConfigFileName, const float inTargetArrayTimeStep) {
+	return std::make_unique<JSONConfigTargetProvider>(inConfigFileName, inTargetArrayTimeStep);
 }

@@ -5,10 +5,12 @@
 
 #include <optional>
 #include <vector>
+#include <memory>
 
 class IConfigLoader;
 class ITargetProvider;
 class IBallisticSolver;
+class IDroneState;
 
 class MissionProcessor {
 private:
@@ -25,7 +27,7 @@ public:
 	void step();
 	void reset();
 
-	void changeSolver(IBallisticSolver* newSolver);
+	void changeSolver(std::unique_ptr<IBallisticSolver> newSolver);
 
 	void writeResults(const char* inFileName);
 
@@ -35,19 +37,21 @@ private:
 	void clearMission();
 	void initMission();
 
-	static DroneState updateDrone(
-		const DroneState& state,
+	static void updateDrone(
+		DroneState& state,
+		std::unique_ptr<IDroneState>& SM_droneState,
 		const DroneConfig& droneConfig,
 		const SimulationConfig& simulationConfig);
 
-	IConfigLoader* configLoader{ nullptr };
-	ITargetProvider* targetProvider{ nullptr };
-	IBallisticSolver* ballisticSolver{ nullptr };
+	std::unique_ptr<IConfigLoader> configLoader{ nullptr };
+	std::unique_ptr<ITargetProvider> targetProvider{ nullptr };
+	std::unique_ptr<IBallisticSolver> ballisticSolver{ nullptr };
 
 	size_t stepIndex{ 0 };
 	float simulationTime{ 0 };
 
 	DroneState droneState{ };
+	std::unique_ptr<IDroneState> SM_droneState{ };
 	std::vector<TargetState> targetStates{ };
 
 	struct DroneAIState

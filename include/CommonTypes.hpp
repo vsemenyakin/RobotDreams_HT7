@@ -125,20 +125,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Config,
 
 // ---
 
-enum EDroneState
-{
-	STOPPED,
-	ACCELERATING,
-	DECELERATING,
-	TURNING_PLUS,
-	TURNING_MINUS,
-	MOVING
-};
-
-const char* toString(const EDroneState inDroneState);
-
-// ---
-
 struct DroneState
 {
 	DroneState() = default;
@@ -149,7 +135,6 @@ struct DroneState
 
 	float velocity{ 0.f };
 
-	EDroneState state{ STOPPED };
 	float targetAngle{ 0.f };
 
 	int targetIndex{ 0 };

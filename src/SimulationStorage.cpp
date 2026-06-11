@@ -24,7 +24,6 @@ void SimulationStorage::writeToJSONFile(const std::string& inFileName) const
 		json stepJSON = json::object();
 		stepJSON["position"] = state.position;
 		stepJSON["direction"] = state.direction;
-		stepJSON["state"] = state.state;
 		stepJSON["targetIndex"] = state.targetIndex;
 		stepJSON["dropPoint"] = state.dropPoint;
 		stepJSON["aimPoint"] = state.aimPoint;

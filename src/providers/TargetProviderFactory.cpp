@@ -1,0 +1,20 @@
+﻿#include "providers/TargetProviderFactory.hpp"
+#include "providers/JSONConfigTargetProvider.hpp"
+
+std::unique_ptr<ITargetProvider> createProvider(ProviderType type,
+	const std::any& firstArg,
+	const std::any& secondArg)
+{
+	switch(type) {
+		case ProviderType::JSON:
+		{
+			const auto configFileName = std::any_cast<std::string>(firstArg);
+			const auto targetArrayTimeStep = std::any_cast<float>(secondArg);
+			return createJSONTargetProvider(configFileName, targetArrayTimeStep);
+		}
+		
+		default:
+			assert(false && "Unknown provider type");
+			return nullptr;
+	}
+}

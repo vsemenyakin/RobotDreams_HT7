@@ -1,10 +1,184 @@
 ﻿#include "MissionProcessor.hpp"
-#include "config/ConfigLoaderFabric.hpp"
-#include "providers/TargetProviderFabric.hpp"
-#include "solvers/BallisticSolverFabric.hpp"
+#include "config/ConfigLoaderFactory.hpp"
+#include "providers/TargetProviderFactory.hpp"
+#include "solvers/BallisticSolverFactory.hpp"
 #include "Utils.hpp"
 
 #include <limits>
+#include <assert.h>
+
+///////////////////////////////////////////////////////////// State machine {{{
+
+struct SimulationConfigs {
+	const DroneConfig& droneConfig;
+	const SimulationConfig& simulationConfig;
+};
+
+class IDroneState {
+public:
+    virtual ~IDroneState() = default;
+ 
+    virtual std::unique_ptr<IDroneState>
+        execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) = 0;
+ 
+    virtual const char* name() const = 0;
+};
+
+// --------------
+
+class StoppedState : public IDroneState {
+public:
+    std::unique_ptr<IDroneState> execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) override
+	{
+		//Drone stopped - no any changes
+		// for dynamic properties are needed
+		return nullptr;
+	}
+
+	const char* name() const override { return "STOPPED"; }
+};
+
+// -------------
+
+class MovingState : public IDroneState {
+public:
+	virtual std::unique_ptr<IDroneState>
+		execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs)
+	{
+		DroneState nextState = inoutDroneState;
+
+		const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+		nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
+
+		inoutDroneState = nextState;
+
+		return nullptr;
+	}
+
+	const char* name() const override { return "MOVING"; }
+};
+
+class AcceleratingState : public IDroneState {
+public:
+    std::unique_ptr<IDroneState> execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) override
+	{
+		DroneState nextState = inoutDroneState;
+
+		nextState.velocity = inoutDroneState.velocity + inoutDroneState.acceleration * inConfigs.simulationConfig.timeStep;
+		if (nextState.velocity >= inConfigs.droneConfig.attackSpeed) {
+			nextState.velocity = inConfigs.droneConfig.attackSpeed;
+
+			const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+			nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
+
+			inoutDroneState = nextState;
+			
+			return std::make_unique<MovingState>();
+		}
+
+		const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+		nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
+
+		inoutDroneState = nextState;
+
+		return nullptr;
+	}
+
+	const char* name() const override { return "ACCELERATING"; }
+};
+
+// -------------
+
+class DeceleratingState : public IDroneState {
+public:
+    std::unique_ptr<IDroneState> execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) override
+	{
+		DroneState nextState = inoutDroneState;
+
+		nextState.velocity = inoutDroneState.velocity - inoutDroneState.acceleration * inConfigs.simulationConfig.timeStep;
+		if (nextState.velocity <= 0.f) {
+			nextState.velocity = 0.f;
+
+			const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+			nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
+
+			inoutDroneState = nextState;
+
+			return std::make_unique<StoppedState>();
+		}
+
+		const float velocityPerStep = nextState.velocity * inConfigs.simulationConfig.timeStep;
+		nextState.position = inoutDroneState.position + Coord::createPolar(velocityPerStep, nextState.direction);
+
+		inoutDroneState = nextState;
+
+		return nullptr;
+	}
+
+	const char* name() const override { return "DECELERATING"; }
+};
+
+// -------------
+
+class TurningPlusState : public IDroneState {
+public:
+    std::unique_ptr<IDroneState> execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) override
+	{
+		DroneState nextState = inoutDroneState;
+
+		nextState.direction = inoutDroneState.direction + inConfigs.droneConfig.angularSpeed;
+
+		const float leftTurn = nextState.direction - inoutDroneState.targetAngle;
+		if (std::abs(leftTurn) < inConfigs.droneConfig.turnThreshold ||
+			std::abs(leftTurn) < inConfigs.droneConfig.angularSpeed)
+		{
+			nextState.direction = inoutDroneState.targetAngle;
+
+			inoutDroneState = nextState;
+
+			//Stopped because drone can rotate only when stopped
+			return std::make_unique<StoppedState>();
+		}
+
+		inoutDroneState = nextState;
+
+		return nullptr;
+	}
+
+	const char* name() const override { return "TURNING_PLUS"; }
+};
+
+// -------------
+
+class TurningMinusState : public IDroneState {
+public:
+    std::unique_ptr<IDroneState> execute(DroneState& inoutDroneState, const SimulationConfigs& inConfigs) override
+	{
+		DroneState nextState = inoutDroneState;
+
+		nextState.direction = inoutDroneState.direction - inConfigs.droneConfig.angularSpeed;
+
+		const float leftTurn = nextState.direction - inoutDroneState.targetAngle;
+		if (std::abs(leftTurn) < inConfigs.droneConfig.turnThreshold ||
+			std::abs(leftTurn) < inConfigs.droneConfig.angularSpeed)
+		{
+			nextState.direction = inoutDroneState.targetAngle;
+
+			inoutDroneState = nextState;
+
+			//Stopped because drone can rotate only when stopped
+			return std::make_unique<StoppedState>();
+		}
+
+		inoutDroneState = nextState;
+
+		return nullptr;
+	}
+
+	const char* name() const override { return "TURNING_MINUS"; }
+};
+
+///////////////////////////////////////////////////////////// }}} State machine
 
 MissionProcessor::MissionProcessor(
 		const char* inAmmoConfigFileName,
@@ -12,8 +186,15 @@ MissionProcessor::MissionProcessor(
 		const char* inTargetsFileName)
 {
 	configLoader = createLoader(LoaderType::FILE, inAmmoConfigFileName, inConfigFileName);
+	assert(configLoader && "Failed to create config loader");
+
 	targetProvider = createProvider(ProviderType::JSON, inTargetsFileName, configLoader->getConfig().targetArrayTimeStep);
-	ballisticSolver = createSolver(SolverType::ANALYTICAL);
+	assert(targetProvider && "Failed to create target provider");
+
+	ballisticSolver = createSolver(SolverType::TABLE, "ballistic_table.txt");
+	assert(ballisticSolver && "Failed to create ballistic solver");
+
+	SM_droneState = std::make_unique<StoppedState>();
 
 	initMission();
 }
@@ -101,14 +282,14 @@ void MissionProcessor::step() {
 
 			if (direction < droneState.direction) {
 				droneState.targetAngle = direction;
-				droneState.state = EDroneState::TURNING_MINUS;
+				SM_droneState = std::make_unique<TurningMinusState>();
 			}
 			else if (direction > droneState.direction) {
 				droneState.targetAngle = direction;
-				droneState.state = EDroneState::TURNING_PLUS;
+				SM_droneState = std::make_unique<TurningPlusState>();
 			}
 			else {
-				droneState.state = EDroneState::ACCELERATING;
+				SM_droneState = std::make_unique<AcceleratingState>();
 
 				if (distanceToAimingPosition <= horizontalDistance) {
 					droneState.dropPoint = droneState.position;
@@ -120,8 +301,9 @@ void MissionProcessor::step() {
 	droneAIState.previousTargetState = currentTargetState;
 	//}}}
 
-	droneState = MissionProcessor::updateDrone(
+	MissionProcessor::updateDrone(
 		droneState,
+		SM_droneState,
 		configLoader->getConfig().drone,
 		configLoader->getConfig().simulation);
 
@@ -136,20 +318,12 @@ void MissionProcessor::reset() {
 	initMission();
 }
 
-void MissionProcessor::changeSolver(IBallisticSolver* newSolver) {
-	delete ballisticSolver;
-	
-	ballisticSolver = newSolver;
+void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> newSolver) {
+	ballisticSolver = std::move(newSolver);
 }
 
 void MissionProcessor::writeResults(const char* inFileName) {
 	simulationStorage.writeToJSONFile(inFileName);
-}
-
-MissionProcessor::~MissionProcessor() {
-	delete configLoader;
-	delete targetProvider;
-	delete ballisticSolver;
 }
 
 void MissionProcessor::clearMission() {
@@ -167,67 +341,16 @@ void MissionProcessor::initMission() {
 	targetStates.resize(targetProvider->getTargetCount());
 }
 
-DroneState MissionProcessor::updateDrone(
-	const DroneState& state,
+void MissionProcessor::updateDrone(
+	DroneState& state,
+	std::unique_ptr<IDroneState>& SM_droneState,
 	const DroneConfig& droneConfig,
 	const SimulationConfig& simulationConfig)
 {
-	DroneState nextState = state;
-
-	const float a = state.acceleration;
-
-	//Here state - is like "target" state
-	switch (state.state)
-	{
-	case STOPPED:
-		//Drone stopped - no any changes
-		// for dynamic properties are needed
-		break;
-
-	case ACCELERATING:
-		nextState.velocity = state.velocity + a * simulationConfig.timeStep;
-		if (nextState.velocity >= droneConfig.attackSpeed) {
-			nextState.velocity = droneConfig.attackSpeed;
-			nextState.state = MOVING;
-		}
-		break;
-
-	case DECELERATING:
-		nextState.velocity = state.velocity - a * simulationConfig.timeStep;
-		if (nextState.velocity <= 0.f) {
-			nextState.velocity = 0.f;
-			nextState.state = STOPPED;
-		}
-		break;
-
-	case TURNING_PLUS:
-		nextState.direction = state.direction + droneConfig.angularSpeed;
-		break;
-
-	case TURNING_MINUS:
-		nextState.direction = state.direction - droneConfig.angularSpeed;
-		break;
-
-	case MOVING:
-		//Drone stopped - no any changes
-		// for dynamic properties are needed
-		break;
+	std::unique_ptr<IDroneState> SM_nextDroneState = SM_droneState->execute(state, SimulationConfigs{ droneConfig, simulationConfig });
+	if (SM_nextDroneState) {
+		SM_droneState = std::move(SM_nextDroneState);
 	}
-
-	if (state.state == TURNING_PLUS || state.state == TURNING_MINUS) {
-		const float leftTurn = nextState.direction - state.targetAngle;
-		if (std::abs(leftTurn) < droneConfig.turnThreshold ||
-			std::abs(leftTurn) < droneConfig.angularSpeed)
-		{
-			nextState.direction = state.targetAngle;
-
-			//Stopped because drone can rotate only when stopped
-			nextState.state = STOPPED;
-		}
-	}
-
-	const float velocityPerStep = nextState.velocity * simulationConfig.timeStep;
-	nextState.position = state.position + Coord::createPolar(velocityPerStep, nextState.direction);
-
-	return nextState;
 }
+
+MissionProcessor::~MissionProcessor() = default;
