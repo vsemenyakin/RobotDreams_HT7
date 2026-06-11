@@ -10,6 +10,7 @@ add_executable(ballistics_calculator
 	src/solvers/SimpleBallisticSolver.cpp
 	include/solvers/SimpleBallisticSolver.hpp
 	include/solvers/BallisticSolverFabric.hpp
+	src/solvers/BallisticSolverFabric.cpp
 	src/CommonTypes.cpp
 	include/CommonTypes.hpp
 	src/config/FileConfigLoader.cpp

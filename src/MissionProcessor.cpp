@@ -189,7 +189,10 @@ MissionProcessor::MissionProcessor(
 	assert(configLoader && "Failed to create config loader");
 
 	targetProvider = createProvider(ProviderType::JSON, inTargetsFileName, configLoader->getConfig().targetArrayTimeStep);
+	assert(targetProvider && "Failed to create target provider");
+
 	ballisticSolver = createSolver(SolverType::TABLE, "ballistic_table.txt");
+	assert(ballisticSolver && "Failed to create ballistic solver");
 
 	SM_droneState = std::make_unique<StoppedState>();
 
