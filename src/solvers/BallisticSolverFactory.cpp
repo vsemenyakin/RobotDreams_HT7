@@ -1,4 +1,4 @@
-﻿#include "solvers/BallisticSolverFabric.hpp"
+﻿#include "solvers/BallisticSolverFactory.hpp"
 #include "solvers/SimpleBallisticSolver.hpp"
 #include "solvers/TableBallisticSolver.hpp"
 

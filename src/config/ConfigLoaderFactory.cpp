@@ -1,4 +1,4 @@
-#include "config/ConfigLoaderFabric.hpp"
+#include "config/ConfigLoaderFactory.hpp"
 #include "config/FileConfigLoader.hpp"
 
 #include <assert.h>

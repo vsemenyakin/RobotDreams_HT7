@@ -1,4 +1,4 @@
-﻿#include "providers/TargetProviderFabric.hpp"
+﻿#include "providers/TargetProviderFactory.hpp"
 #include "providers/JSONConfigTargetProvider.hpp"
 
 std::unique_ptr<ITargetProvider> createProvider(ProviderType type,
