@@ -186,7 +186,7 @@ MissionProcessor::MissionProcessor(
 {
 	configLoader = createLoader(LoaderType::FILE, inAmmoConfigFileName, inConfigFileName);
 	targetProvider = createProvider(ProviderType::JSON, inTargetsFileName, configLoader->getConfig().targetArrayTimeStep);
-	ballisticSolver = createSolver(SolverType::ANALYTICAL);
+	ballisticSolver = createSolver(SolverType::TABLE, "ballistic_table.txt");
 
 	SM_droneState = std::make_unique<StoppedState>();
 
