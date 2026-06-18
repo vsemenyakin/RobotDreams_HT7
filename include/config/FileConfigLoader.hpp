@@ -1,5 +1,10 @@
 ﻿#pragma once
 
-#include "interfaces/IConfigLoader.hpp"
+#include <memory>
+#include <string>
 
-IConfigLoader* createFileConfigLoader(const char* inAmmoConfigFileName, const char* inConfigFileName);
+class IConfigLoader;
+
+std::unique_ptr<IConfigLoader> createFileConfigLoader(
+    const std::string& inAmmoConfigFileName,
+    const std::string& inConfigFileName);

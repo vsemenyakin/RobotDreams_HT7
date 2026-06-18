@@ -6,6 +6,11 @@
 #include <vector>
 #include <cassert>
 #include <string>
+#include <cmath>
+
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 using json = nlohmann::json;
 
@@ -13,10 +18,17 @@ using json = nlohmann::json;
 
 class JSONConfigTargetProvider : public ITargetProvider {
 public:
-	JSONConfigTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep);
+	JSONConfigTargetProvider(
+		const std::string& inConfigFileName,
+		const float inTargetArrayTimeStep,
+		const float inTickDeltaTime);
 
-	size_t getTargetCount() override;
-	TargetState getTarget(const int inIndex, const float inSimulationTime) override;
+	size_t getTargetCount() const override;
+	TargetState getTarget(const int inIndex) const override;
+
+	bool isThreadReady() const override;
+    void start() override;
+    void stop() override;
 
 private:
 	struct TargetsConfig
@@ -33,6 +45,9 @@ private:
 		std::vector<std::vector<Coord>> targetsPositions{ };
 	};
 
+	void threadEnterPoint();
+	void tick();
+
 	TargetState getTargetStateAtTime(
 		const TargetsConfig& inConfig,
 		const size_t targetIndex,
@@ -40,24 +55,73 @@ private:
 		const float inArrayTimeStep);
 
 	TargetsConfig config;
-	float targetArrayTimeStep{ 0.f };
+	float targetArrayTimeStep{ 0.f }; // Time between target control points
+	float tickDeltaTime{ 0.f };
+	float simulationTime{ 0.f };
+
+	std::vector<TargetState> targetStates;
+	mutable std::mutex targetStatesMutex;
+
+	enum class State {
+		ThreadNotCreated,
+		ThreadReady,
+		Started,
+		Stopped
+	};
+
+	std::atomic<State> state{ State::ThreadNotCreated };
+
+	std::thread thread;
 };
 
 // ----------------
 
-JSONConfigTargetProvider::JSONConfigTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep) :
+JSONConfigTargetProvider::JSONConfigTargetProvider(
+	const std::string& inConfigFileName,
+	const float inTargetArrayTimeStep,
+	const float inTickDeltaTime)
+	:
 	config(TargetsConfig::createFromJSONFile(inConfigFileName)),
-	targetArrayTimeStep(inTargetArrayTimeStep)
+	targetArrayTimeStep(inTargetArrayTimeStep),
+	tickDeltaTime(inTickDeltaTime)
 {
+	//Make targets state array be big enough to contain all targets states
+	targetStates.resize(getTargetCount());
+
+	thread = std::thread{ &JSONConfigTargetProvider::threadEnterPoint, this };
 }
 
-size_t JSONConfigTargetProvider::getTargetCount() {
+size_t JSONConfigTargetProvider::getTargetCount() const {
 	return config.getTargetCount();
 }
 
-TargetState JSONConfigTargetProvider::getTarget(const int inIndex, const float inSimulationTime) {
-	assert(inIndex < getTargetCount());
-	return getTargetStateAtTime(config, inIndex, inSimulationTime, targetArrayTimeStep);
+TargetState JSONConfigTargetProvider::getTarget(const int inIndex) const {
+
+	TargetState result;
+	{
+		std::lock_guard<std::mutex> guard(targetStatesMutex);
+
+		assert(inIndex < getTargetCount());
+		result = targetStates[inIndex];
+	}
+
+	return result;
+}
+
+bool JSONConfigTargetProvider::isThreadReady() const
+{
+	return (state != State::ThreadNotCreated);
+}
+
+void JSONConfigTargetProvider::start()
+{
+	state = State::Started;
+}
+
+void JSONConfigTargetProvider::stop()
+{
+	state = State::Stopped;
+	thread.join();
 }
 
 JSONConfigTargetProvider::TargetsConfig JSONConfigTargetProvider::TargetsConfig::createFromJSONFile(const std::string& inFileName)
@@ -113,6 +177,30 @@ void ConfigTargetProvider::TargetsConfig::print() const
 }
 #endif //DebugPrint
 
+void JSONConfigTargetProvider::threadEnterPoint()
+{
+	state = State::ThreadReady;
+
+	while (state != State::Stopped) {
+		if (state == State::Started) {
+			tick();
+		}
+	}
+}
+
+void JSONConfigTargetProvider::tick()
+{
+	std::lock_guard<std::mutex> guard(targetStatesMutex);
+
+	simulationTime += tickDeltaTime;
+
+	for (size_t targetIndex = 0; targetIndex < getTargetCount(); ++targetIndex)
+	{
+		targetStates[targetIndex] = getTargetStateAtTime(
+			config, targetIndex, simulationTime, targetArrayTimeStep);
+	}
+}
+
 TargetState JSONConfigTargetProvider::getTargetStateAtTime(
 	const TargetsConfig& inConfig,
 	const size_t targetIndex,
@@ -125,18 +213,20 @@ TargetState JSONConfigTargetProvider::getTargetStateAtTime(
 	int currentPositionIndex = static_cast<int>(floor(inSimulationTime / inArrayTimeStep)) % timeSteps;
 	int nextPositionIndex = (currentPositionIndex + 1) % timeSteps;
 
-	float frac = (inSimulationTime - currentPositionIndex * inArrayTimeStep) / inArrayTimeStep;
+	const float simulationTimeNormalized = std::fmod(inSimulationTime, timeSteps * inArrayTimeStep);
+	const float frac = (simulationTimeNormalized - currentPositionIndex * inArrayTimeStep) / inArrayTimeStep;
 
 	const Coord currentPosition = inConfig.targetsPositions[targetIndex][currentPositionIndex];
 	const Coord nextPosition = inConfig.targetsPositions[targetIndex][nextPositionIndex];
 
 	result.position = currentPosition + (nextPosition - currentPosition) * frac;
+	result.velocity = (nextPosition - currentPosition) / inArrayTimeStep;
 
 	return result;
 }
 
 //Factory function
 
-ITargetProvider* createJSONTargetProvider(const char* inConfigFileName, const float inTargetArrayTimeStep) {
-	return new JSONConfigTargetProvider(inConfigFileName, inTargetArrayTimeStep);
+std::unique_ptr<ITargetProvider> createJSONTargetProvider(const std::string& inConfigFileName, const float inTargetArrayTimeStep, const float inTickDeltaTime) {
+	return std::make_unique<JSONConfigTargetProvider>(inConfigFileName, inTargetArrayTimeStep, inTickDeltaTime);
 }

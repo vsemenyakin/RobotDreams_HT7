@@ -17,9 +17,7 @@ int main()
 		fileNames::ammo, fileNames::config, fileNames::targets
 	};
 
-	while (missionProcessor.hasNext()) {
-		missionProcessor.step();
-	}
+	missionProcessor.start();
 
 	missionProcessor.writeResults(fileNames::simulation);
 

@@ -5,10 +5,13 @@
 
 #include <optional>
 #include <vector>
+#include <memory>
+#include <string>
 
 class IConfigLoader;
 class ITargetProvider;
 class IBallisticSolver;
+class DronePhysics;
 
 class MissionProcessor {
 private:
@@ -16,39 +19,29 @@ private:
 
 public:
 	MissionProcessor(
-		const char* inAmmoConfigFileName,
-		const char* inConfigFileName,
-		const char* inTargetsFileName);
+		const std::string& inAmmoConfigFileName,
+		const std::string& inConfigFileName,
+		const std::string& inTargetsFileName);
 
-	bool hasNext() const;
+	void start();
 
-	void step();
-	void reset();
+	void changeSolver(std::unique_ptr<IBallisticSolver> newSolver);
 
-	void changeSolver(IBallisticSolver* newSolver);
-
-	void writeResults(const char* inFileName);
+	void writeResults(const std::string& inFileName);
 
 	~MissionProcessor();
 
 private:
-	void clearMission();
-	void initMission();
+	void step();
+	bool hasNext() const;
 
-	static DroneState updateDrone(
-		const DroneState& state,
-		const DroneConfig& droneConfig,
-		const SimulationConfig& simulationConfig);
-
-	IConfigLoader* configLoader{ nullptr };
-	ITargetProvider* targetProvider{ nullptr };
-	IBallisticSolver* ballisticSolver{ nullptr };
+	std::unique_ptr<IConfigLoader> configLoader{ nullptr };
+	std::unique_ptr<ITargetProvider> targetProvider{ nullptr };
+	std::unique_ptr<IBallisticSolver> ballisticSolver{ nullptr };
+	std::unique_ptr<DronePhysics> dronePhysics{ nullptr };
 
 	size_t stepIndex{ 0 };
 	float simulationTime{ 0 };
-
-	DroneState droneState{ };
-	std::vector<TargetState> targetStates{ };
 
 	struct DroneAIState
 	{
