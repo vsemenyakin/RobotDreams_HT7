@@ -32,6 +32,8 @@ add_executable(ballistics_calculator
 	include/interfaces/IConfigLoader.hpp
 	include/interfaces/ITargetProvider.hpp
 	include/solvers/TableBallisticSolver.hpp
-	src/solvers/TableBallisticSolver.cpp)
+	src/solvers/TableBallisticSolver.cpp
+	include/DronePhysics.hpp
+	src/DronePhysics.cpp)
 
 target_include_directories(ballistics_calculator PUBLIC include)

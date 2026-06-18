@@ -6,4 +6,4 @@
 #include <string>
 
 std::unique_ptr<ITargetProvider> createJSONTargetProvider(
-    const std::string& inConfigFileName, const float inTargetArrayTimeStep);
+    const std::string& inConfigFileName, const float inTargetArrayTimeStep, const float inTickDeltaTime);

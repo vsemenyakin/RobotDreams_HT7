@@ -168,4 +168,5 @@ private:
 struct TargetState
 {
 	Coord position;
+	Coord velocity;
 };

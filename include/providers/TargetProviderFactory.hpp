@@ -11,4 +11,5 @@ enum class ProviderType
 
 std::unique_ptr<ITargetProvider> createProvider(ProviderType type,
 	const std::any& firstArg = {},
-	const std::any& secondArg = {});
+	const std::any& secondArg = {},
+	const std::any& thirdArg = {});

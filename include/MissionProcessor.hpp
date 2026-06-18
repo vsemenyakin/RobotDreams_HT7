@@ -6,11 +6,12 @@
 #include <optional>
 #include <vector>
 #include <memory>
+#include <string>
 
 class IConfigLoader;
 class ITargetProvider;
 class IBallisticSolver;
-class IDroneState;
+class DronePhysics;
 
 class MissionProcessor {
 private:
@@ -18,41 +19,29 @@ private:
 
 public:
 	MissionProcessor(
-		const char* inAmmoConfigFileName,
-		const char* inConfigFileName,
-		const char* inTargetsFileName);
+		const std::string& inAmmoConfigFileName,
+		const std::string& inConfigFileName,
+		const std::string& inTargetsFileName);
 
-	bool hasNext() const;
-
-	void step();
-	void reset();
+	void start();
 
 	void changeSolver(std::unique_ptr<IBallisticSolver> newSolver);
 
-	void writeResults(const char* inFileName);
+	void writeResults(const std::string& inFileName);
 
 	~MissionProcessor();
 
 private:
-	void clearMission();
-	void initMission();
-
-	static void updateDrone(
-		DroneState& state,
-		std::unique_ptr<IDroneState>& SM_droneState,
-		const DroneConfig& droneConfig,
-		const SimulationConfig& simulationConfig);
+	void step();
+	bool hasNext() const;
 
 	std::unique_ptr<IConfigLoader> configLoader{ nullptr };
 	std::unique_ptr<ITargetProvider> targetProvider{ nullptr };
 	std::unique_ptr<IBallisticSolver> ballisticSolver{ nullptr };
+	std::unique_ptr<DronePhysics> dronePhysics{ nullptr };
 
 	size_t stepIndex{ 0 };
 	float simulationTime{ 0 };
-
-	DroneState droneState{ };
-	std::unique_ptr<IDroneState> SM_droneState{ };
-	std::vector<TargetState> targetStates{ };
 
 	struct DroneAIState
 	{
